@@ -1,9 +1,16 @@
 import { Outlet } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import MainRouters from "./Main/index";
 import AuthRouters from "./Auth/index";
 
+
 const userRoutes = [
+  {
+    path: "/",
+    element: <Navigate to="/users" replace />,
+  },
+
   {
     path: "/users",
     element: <MainLayout />,

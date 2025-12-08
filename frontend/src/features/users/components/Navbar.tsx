@@ -8,50 +8,52 @@ const Navbar = () => {
   const getNavLinkClass = ({ isActive }) => {
     const baseClasses = "py-1 transition-all duration-200 border-b-2";
     const activeClasses = "text-primary font-bold border-primary";
-    const inactiveClasses = "text-text-main font-medium border-transparent hover:text-primary";
+    const inactiveClasses =
+      "text-text-main font-medium border-transparent hover:text-primary";
 
     return `${baseClasses} ${isActive ? activeClasses : inactiveClasses}`;
   };
-  // -------------------------------
 
   return (
     <div className="bg-white flex justify-between items-center py-2 text-sm sticky top-0 z-50 shadow-sm border-b border-surface-dim">
+
       {/* Logo */}
       <img
         className="w-15 cursor-pointer ml-10"
         src="/src/assets/logos/LogoChu.svg"
         alt="logo"
+        onClick={() => navigate("/users")}
       />
 
       {/* Menu Links */}
       <ul className="hidden md:flex space-x-10 items-center gap-5">
         <li>
-          <NavLink to="/" className={getNavLinkClass}>
+          <NavLink to="/users" end className={getNavLinkClass}>
             Trang chủ
           </NavLink>
         </li>
         <li>
-          <NavLink to="/maps" className={getNavLinkClass}>
+          <NavLink to="/users/maps" className={getNavLinkClass}>
             Bản đồ
           </NavLink>
         </li>
         <li>
-          <NavLink to="/forum" className={getNavLinkClass}>
+          <NavLink to="/users/forum" className={getNavLinkClass}>
             Diễn đàn
           </NavLink>
         </li>
         <li>
-          <NavLink to="/issues" className={getNavLinkClass}>
+          <NavLink to="/users/issues" className={getNavLinkClass}>
             Sự cố
           </NavLink>
         </li>
         <li>
-          <NavLink to="/news" className={getNavLinkClass}>
+          <NavLink to="/users/news" className={getNavLinkClass}>
             Tin tức
           </NavLink>
         </li>
         <li>
-          <NavLink to="/contact" className={getNavLinkClass}>
+          <NavLink to="/users/contact" className={getNavLinkClass}>
             Liên hệ
           </NavLink>
         </li>
