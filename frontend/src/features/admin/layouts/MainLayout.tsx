@@ -1,20 +1,34 @@
-import Sidebar from "../components/General/Sidebar";
-import Header from "../components/General/Header";
-import type { ReactNode } from "react";
+import { SidebarProvider, useSidebar } from "../context/SidebarContext";
+import { Outlet } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
 
-interface OrganizationLayoutProps {
-  children: ReactNode;
-}
+const LayoutContent: React.FC = () => {
+  const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
-const MainLayout: React.FC<OrganizationLayoutProps> = ({ children }) => {
   return (
-    <div className="flex h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 p-4 overflow-y-auto">{children}</main>
+    <div className="min-h-screen xl:flex">
+      <div>
+        <Sidebar />
+      </div>
+      <div
+        className={`flex-1 transition-all duration-300 ease-in-out ${
+          isExpanded || isHovered ? "lg:ml-[250px]" : "lg:ml-[90px]"
+        } ${isMobileOpen ? "ml-0" : ""}`}
+      >
+        <Sidebar />
+        <div className="p-4 mx-auto max-w-(--breakpoint-xl) md:p-6">
+          <Outlet />
+        </div>
       </div>
     </div>
+  );
+};
+
+const MainLayout = () => {
+  return (
+    <SidebarProvider>
+      <LayoutContent />
+    </SidebarProvider>
   );
 };
 
