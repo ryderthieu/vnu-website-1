@@ -1,5 +1,3 @@
-// File: src/features/users/routers/index.tsx
-
 import { Outlet } from 'react-router-dom';
 import MainLayout from "../layouts/MainLayout";
 import MainRouters from "./Main/index";
