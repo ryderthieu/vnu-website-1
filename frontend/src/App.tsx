@@ -1,4 +1,4 @@
-import Dashboard from "./features/admin/pages/Main/Users/Dashboard";
+import Dashboard from "./features/admin/pages/Dashboard";
 import { useState } from "react";
 import { useRoutes } from "react-router-dom";
 import routes from "./features/shared/routes";
@@ -6,8 +6,7 @@ import { MainProvider } from "./features/shared/context/MainContext";
 
 function App() {
   const element = useRoutes(routes);
-  // return <MainProvider>{element}</MainProvider>;
-  return <MainProvider><Dashboard/></MainProvider>;
+  return <MainProvider>{element}</MainProvider>;
 }
 
 export default App;

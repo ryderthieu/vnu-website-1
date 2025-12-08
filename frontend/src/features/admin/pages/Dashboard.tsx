@@ -3,7 +3,7 @@ import { Bell, ChevronRight } from "lucide-react";
 import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { DatePicker } from 'antd';
-import { LocationCard } from "../../../components/LocationCard";
+import { LocationCard } from "../components/DashboardPage/LocationCard";
 
 const { RangePicker } = DatePicker;
 
