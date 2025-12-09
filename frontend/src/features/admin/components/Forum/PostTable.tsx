@@ -54,11 +54,11 @@ export default function PostTable() {
   }
 
   function handleView(postId: number) {
-    navigate(`/admin/posts/${postId}`);
+    navigate(`/admin/forum/${postId}`);
   }
 
   function handleEdit(postId: number) {
-    navigate(`/admin/posts/edit/${postId}`);
+    navigate(`/admin/forum/edit/${postId}`);
   }
 
   function handleDelete(postId: number) {
@@ -172,7 +172,7 @@ export default function PostTable() {
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                className="py-3 font-medium text-gray-500 text-start text-theme-sm dark:text-gray-400 mx-2"
               >
                 Ngày đăng
               </TableCell>
@@ -203,7 +203,7 @@ export default function PostTable() {
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                   {post.author}
                 </TableCell>
-                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400 mx-2">
                   {post.createdAt}
                 </TableCell>
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
@@ -212,13 +212,13 @@ export default function PostTable() {
                 <TableCell className="py-3 text-gray-500 text-theme-sm dark:text-gray-400">
                   <div className="flex gap-2">
                     <button onClick={() => handleView(post.postId)}>
-                      <MdRemoveRedEye className="w-5 h-5" />
+                      <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleEdit(post.postId)}>
-                      <MdEdit className="w-5 h-5 " />
+                      <MdEdit className="w-5 h-5 cursor-pointer" />
                     </button>
                     <button onClick={() => handleDelete(post.postId)}>
-                      <MdDeleteOutline className="w-5 h-5 " />
+                      <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
                 </TableCell>
