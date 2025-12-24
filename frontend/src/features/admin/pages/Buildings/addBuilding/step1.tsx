@@ -12,32 +12,11 @@ import {
   LinkOutlined,
   InboxOutlined,
 } from "@ant-design/icons"
-import type { UploadFile } from "antd/es/upload/interface"
+import type { UploadFile, UploadProps } from "antd"
 import type { BuildingFormData } from "../../../types/building"
-import type { UploadProps } from "antd"
 
 const { TextArea } = Input
 const { Dragger } = Upload
-
-const props: UploadProps = {
-  name: "file",
-  multiple: true,
-  action: "https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload",
-  onChange(info) {
-    const { status } = info.file
-    if (status !== "uploading") {
-      console.log(info.file, info.fileList)
-    }
-    if (status === "done") {
-      message.success(`${info.file.name} file uploaded successfully.`)
-    } else if (status === "error") {
-      message.error(`${info.file.name} file upload failed.`)
-    }
-  },
-  onDrop(e) {
-    console.log("Dropped files", e.dataTransfer.files)
-  },
-}
 
 interface Step1Props {
   initialData: Partial<BuildingFormData>
@@ -56,11 +35,37 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
   const [description, setDescription] = useState(initialData.description || "")
   const [selectedPlaceId, setSelectedPlaceId] = useState<number | undefined>(initialData.place_id)
 
-  const handleUploadChange = (info: any) => {
-    setFileList(info.fileList.slice(-1))
-    if (info.file.status === "done") {
-      message.success("Upload thành công")
-    }
+  const uploadProps: UploadProps = {
+    name: "file",
+    multiple: false,
+    accept: "image/*",
+    beforeUpload: (file) => {
+      const isImage = file.type.startsWith('image/')
+      if (!isImage) {
+        message.error('Chỉ được tải lên file hình ảnh!')
+        return false
+      }
+      const isLt5M = file.size / 1024 / 1024 < 5
+      if (!isLt5M) {
+        message.error('Hình ảnh phải nhỏ hơn 5MB!')
+        return false
+      }
+      return false // Prevent auto upload
+    },
+    onChange(info) {
+      const newFileList = info.fileList.slice(-1) // Only keep the last file
+      setFileList(newFileList)
+      
+      if (info.file.status === "done") {
+        message.success(`${info.file.name} file uploaded successfully.`)
+      } else if (info.file.status === "error") {
+        message.error(`${info.file.name} file upload failed.`)
+      }
+    },
+    onDrop(e) {
+      console.log("Dropped files", e.dataTransfer.files)
+    },
+    fileList: fileList,
   }
 
   const handlePlaceChange = (value: number) => {
@@ -69,13 +74,20 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
-      const imageUrl = fileList[0]?.url || fileList[0]?.thumbUrl || ""
+      if (!selectedPlaceId) {
+        message.warning("Vui lòng chọn địa điểm trực thuộc")
+        return
+      }
+
+      // Get image file if exists
+      const imageFile = fileList[0]?.originFileObj
+
       onNext({
         name: values.name,
         description: description,
-        image: imageUrl,
         floors: values.floors,
         place_id: selectedPlaceId,
+        imageFile: imageFile, // Save File object instead of URL
       })
     })
   }
@@ -84,21 +96,23 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
       <Form form={form} layout="vertical" initialValues={initialData}>
         {/* Image Upload */}
-        <div className="flex flex-row mb-6 justify-between">
-          <div>
+        <div className="flex flex-row mb-6 justify-between gap-8">
+          <div className="flex-1">
             <label className="block text-lg font-medium mb-2">Hình ảnh tòa nhà</label>
-            <p className="text-md w-50 text-justify text-gray-500 mb-4">
+            <p className="text-md text-justify text-gray-500 mb-4">
               Hình ảnh này sẽ được hiển thị công khai. Chỉ được tải lên 1 ảnh.
             </p>
           </div>
 
-          <Dragger {...props}>
-            <p className="ant-upload-drag-icon">
-              <InboxOutlined />
-            </p>
-            <p className="ant-upload-text">Nhấp hoặc kéo thả ảnh vào khu vực này</p>
-            <p className="ant-upload-hint">Hỗ trợ tải một ảnh (PNG, JPG, SVG, tối đa 400×400px)</p>
-          </Dragger>
+          <div className="flex-1">
+            <Dragger {...uploadProps} style={{ maxWidth: '400px' }}>
+              <p className="ant-upload-drag-icon">
+                <InboxOutlined />
+              </p>
+              <p className="ant-upload-text">Nhấp hoặc kéo thả ảnh vào khu vực này</p>
+              <p className="ant-upload-hint">Hỗ trợ: PNG, JPG, SVG (tối đa 5MB)</p>
+            </Dragger>
+          </div>
         </div>
 
         <hr className="col-span-2 my-6 border-gray-300" />
@@ -109,14 +123,15 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
             {/* Details Section */}
             <div className="mb-6">
               <label className="block text-lg font-medium mb-2">Chi tiết tòa nhà</label>
-              <p className="text-md text-gray-500 mb-4 w-50 text-justify">
+              <p className="text-md text-gray-500 mb-4 text-justify">
                 Giới thiệu về tòa nhà của bạn đến người dùng bằng cách điền vào những ô bên cạnh
               </p>
             </div>
           </div>
+          
           {/* Right Column */}
           <div>
-            {/* Place Name */}
+            {/* Building Name */}
             <Form.Item
               name="name"
               label="Tên tòa nhà"
@@ -125,16 +140,22 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
               <Input placeholder="Nhập tên tòa nhà" size="large" />
             </Form.Item>
 
-            {/* Belong to */}
+            {/* Belong to Place */}
             <Form.Item
               name="province"
               label="Trực thuộc địa điểm"
               rules={[{ required: true, message: "Vui lòng chọn địa điểm trực thuộc" }]}
             >
-              <Select placeholder="Chọn địa điểm" size="large" onChange={handlePlaceChange} options={place} />
+              <Select 
+                placeholder="Chọn địa điểm" 
+                size="large" 
+                onChange={handlePlaceChange} 
+                options={place}
+                value={selectedPlaceId}
+              />
             </Form.Item>
 
-            {/* Address Detail */}
+            {/* Number of Floors */}
             <Form.Item
               name="floors"
               label="Số tầng"
@@ -146,7 +167,12 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
                 },
               ]}
             >
-              <InputNumber placeholder="Nhập số tầng" size="large" style={{ width: "25%" }} min={1} />
+              <InputNumber 
+                placeholder="Nhập số tầng" 
+                size="large" 
+                style={{ width: "100%" }} 
+                min={1} 
+              />
             </Form.Item>
           </div>
 
@@ -155,8 +181,8 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
           {/* General Description */}
           <div>
             <label className="block text-lg font-medium mb-2">Giới thiệu chung</label>
-            <p className="text-md text-gray-500 mb-4 w-50 text-justify">
-              Viết đoạn giới thiệu ngắn về địa điểm của bạn
+            <p className="text-md text-gray-500 mb-4 text-justify">
+              Viết đoạn giới thiệu ngắn về tòa nhà của bạn
             </p>
           </div>
 
@@ -188,6 +214,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
           </div>
         </div>
       </Form>
+      
       {/* Next Button */}
       <div className="flex justify-end">
         <button
