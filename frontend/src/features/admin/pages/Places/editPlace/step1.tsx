@@ -1,6 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Form, Input, Button, Upload, Select, TimePicker, message } from "antd";
+import { provinces, districtsByProvince, wardsByDistrict } from "../../../../../assets/data/location";
 import dayjs from "dayjs";
 import {
   SmileOutlined,
@@ -27,40 +28,48 @@ interface Step1Props {
   onNext: (data: Partial<PlaceCreateRequestWithFile>) => void;
 }
 
-const provinces = [
-  { value: "tp-hcm", label: "TP. Hồ Chí Minh" },
-  { value: "ha-noi", label: "Hà Nội" },
-  { value: "da-nang", label: "Đà Nẵng" },
-];
 
-const districtsByProvince: Record<string, { value: string; label: string }[]> =
-  {
-    "tp-hcm": [
-      { value: "thu-duc", label: "Thủ Đức" },
-      { value: "quan-1", label: "Quận 1" },
-      { value: "quan-10", label: "Quận 10" },
-      { value: "binh-thanh", label: "Bình Thạnh" },
-    ],
-    "ha-noi": [
-      { value: "hoan-kiem", label: "Hoàn Kiếm" },
-      { value: "ba-dinh", label: "Ba Đình" },
-    ],
-    "da-nang": [
-      { value: "hai-chau", label: "Hải Châu" },
-      { value: "thanh-khe", label: "Thanh Khê" },
-    ],
-  };
+// Helper function to parse address
+const parseAddress = (address: string | undefined) => {
+  if (!address)
+    return {
+      province: undefined,
+      district: undefined,
+      ward: undefined,
+      detail: undefined,
+    };
 
-const wardsByDistrict: Record<string, { value: string; label: string }[]> = {
-  "thu-duc": [
-    { value: "linh-trung", label: "Linh Trung" },
-    { value: "linh-xuan", label: "Linh Xuân" },
-    { value: "dong-hoa", label: "Đông Hòa" },
-  ],
-  "quan-1": [
-    { value: "ben-nghe", label: "Bến Nghé" },
-    { value: "ben-thanh", label: "Bến Thành" },
-  ],
+  const parts = address.split(",").map((s) => s.trim());
+
+  if (parts.length < 2) {
+    return {
+      province: undefined,
+      district: undefined,
+      ward: undefined,
+      detail: address,
+    };
+  }
+
+  // Lấy từ cuối lên đầu: Tỉnh/Thành phố (cuối cùng), Quận/Huyện (kế cuối), Phường/Xã, Chi tiết
+  const provinceLabel = parts[parts.length - 1];
+  const districtLabel = parts.length > 1 ? parts[parts.length - 2] : undefined;
+  const wardLabel = parts.length > 2 ? parts[parts.length - 3] : undefined;
+  const detail =
+    parts.length > 3 ? parts.slice(0, parts.length - 3).join(", ") : parts[0];
+
+  // Tìm value tương ứng với label
+  const province = provinces.find((p) => p.label === provinceLabel)?.value;
+  const district =
+    province && districtLabel
+      ? districtsByProvince[province]?.find((d) => d.label === districtLabel)
+          ?.value
+      : undefined;
+  const ward =
+    district && wardLabel
+      ? wardsByDistrict[district]?.find((w) => w.label === wardLabel)?.value
+      : undefined;
+
+  return { province, district, ward, detail };
 };
 
 // Helper function to parse address

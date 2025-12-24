@@ -1,6 +1,7 @@
 import type React from "react";
 import { useState } from "react";
 import { Form, Input, Button, Upload, Select, TimePicker, message } from "antd";
+import { provinces, districtsByProvince, wardsByDistrict } from "../../../../../assets/data/location";
 import {
   SmileOutlined,
   BoldOutlined,
@@ -22,42 +23,6 @@ interface Step1Props {
   initialData: Partial<PlaceDraft>;
   onNext: (data: Partial<PlaceCreateRequestWithFile>) => void;
 }
-
-const provinces = [
-  { value: "tp-hcm", label: "TP. Hồ Chí Minh" },
-  { value: "ha-noi", label: "Hà Nội" },
-  { value: "da-nang", label: "Đà Nẵng" },
-];
-
-const districtsByProvince: Record<string, { value: string; label: string }[]> =
-  {
-    "tp-hcm": [
-      { value: "thu-duc", label: "Thủ Đức" },
-      { value: "quan-1", label: "Quận 1" },
-      { value: "quan-10", label: "Quận 10" },
-      { value: "binh-thanh", label: "Bình Thạnh" },
-    ],
-    "ha-noi": [
-      { value: "hoan-kiem", label: "Hoàn Kiếm" },
-      { value: "ba-dinh", label: "Ba Đình" },
-    ],
-    "da-nang": [
-      { value: "hai-chau", label: "Hải Châu" },
-      { value: "thanh-khe", label: "Thanh Khê" },
-    ],
-  };
-
-const wardsByDistrict: Record<string, { value: string; label: string }[]> = {
-  "thu-duc": [
-    { value: "linh-trung", label: "Linh Trung" },
-    { value: "linh-xuan", label: "Linh Xuân" },
-    { value: "dong-hoa", label: "Đông Hòa" },
-  ],
-  "quan-1": [
-    { value: "ben-nghe", label: "Bến Nghé" },
-    { value: "ben-thanh", label: "Bến Thành" },
-  ],
-};
 
 const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
   const [form] = Form.useForm();
