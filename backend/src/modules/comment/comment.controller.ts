@@ -29,6 +29,21 @@ import { PaginationParamsDto } from 'src/common/dto/pagination-params.dto';
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
+  @Get(':commentId')
+  @ApiOperation({ summary: 'Get a comment' })
+  @ApiOkResponse({
+    description: 'Comment fetched successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        comment: { $ref: getSchemaPath(CommentResponseDto) },
+      },
+    },
+  })
+  async getComment(@Param('commentId') commentId: number) {
+    return this.commentService.getComment(commentId);
+  }
+
   @Patch(':commentId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('jwt')
