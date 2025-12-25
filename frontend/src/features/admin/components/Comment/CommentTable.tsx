@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-import type { Incident } from "../../types/incident";
+import { useNavigate } from "react-router-dom";
 import { MdDeleteOutline } from "react-icons/md";
-import { MdEdit } from "react-icons/md";
 import { MdRemoveRedEye } from "react-icons/md";
 import {
   Table,
@@ -13,112 +11,101 @@ import {
 } from "../UI/Table";
 import Pagination from "../Common/Pagination";
 import SearchInput from "../Common/SearchInput";
-import { FaPlus } from "react-icons/fa6";
-import { incidentService } from "../../services/IncidentService";
+import { commentService } from "../../services/CommentService";
 import dayjs from "dayjs";
 import { DeleteConfirmationModal } from "../Common/DeleteConfirmationModal";
+import type { Comment } from "../../types/comment";
 
-export default function IncidentTable() {
-  const [incidents, setIncidents] = useState<Incident[]>([]);
+interface CommentTableProps {
+  postId: number;
+}
+
+export default function CommentTable({ postId }: CommentTableProps) {
+  const numericPostId = Number(postId);
+
+  const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  const PAGE_SIZE = 5;
+  const PAGE_SIZE = 3;
 
   const [isModalOpen, setModalOpen] = useState(false);
-  const [incidentToDelete, setIncidentToDelete] = useState<number | null>(null);
-
-  const markdownToPlainText = (markdown?: string) => {
-    if (!markdown) return "";
-
-    return markdown
-      .replace(/[#_*`>~-]/g, "")
-      .replace(/\[(.*?)\]\(.*?\)/g, "$1")
-      .replace(/\r?\n|\r/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-  };
+  const [commentToDelete, setCommentToDelete] = useState<number | null>(null);
 
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!numericPostId) return;
+
     setLoading(true);
 
-    incidentService
-      .getAll({ page: currentPage, limit: PAGE_SIZE })
+    commentService
+      .getAll(numericPostId, { page: currentPage, limit: PAGE_SIZE })
       .then((res) => {
-        setIncidents(res.incidents);
+        setComments(res.comments);
         setTotalItems(res.pagination.totalItems);
       })
-      .catch((err) => console.error(err))
+      .catch(console.error)
       .finally(() => setLoading(false));
-  }, [currentPage, searchTerm]);
+  }, [numericPostId, currentPage]);
 
   function handleSearch() {
     setLoading(true);
 
-    incidentService
-      .getAll({ page: 1, limit: PAGE_SIZE, search: searchTerm })
+    commentService
+      .getAll(numericPostId, { page: 1, limit: PAGE_SIZE })
       .then((res) => {
-        setIncidents(res.incidents);
+        setComments(res.comments);
         setCurrentPage(1);
       })
       .finally(() => setLoading(false));
   }
 
-  function handleView(incidentId: number) {
-    navigate(`/admin/incidents/${incidentId}`);
+  function handleView(commentId: number) {
+    navigate(`/admin/comments/${commentId}`);
   }
 
-  function handleEdit(incidentId: number) {
-    navigate(`/admin/incidents/edit/${incidentId}`);
-  }
-
-  function handleAdd() {
-    navigate("/admin/incidents/add");
-  }
-
-  function handleDelete(postId: number) {
-    setIncidentToDelete(postId);
+  function handleDelete(commentId: number) {
+    setCommentToDelete(commentId);
     setModalOpen(true);
   }
 
   async function handleConfirmDelete() {
-    if (!incidentToDelete) return;
+    if (commentToDelete === null) return;
 
     try {
-      await incidentService.delete(incidentToDelete);
+      await commentService.delete(commentToDelete);
 
-      setIncidents((prev) =>
-        prev.filter((i) => i.incidentId !== incidentToDelete)
+      setComments((prev) =>
+        prev.filter((c) => c.commentId !== commentToDelete)
       );
     } catch (error) {
       console.error("Delete failed:", error);
-      alert("Xóa sự cố thất bại");
+      alert("Xóa bình luận thất bại");
     } finally {
       setModalOpen(false);
-      setIncidentToDelete(null);
+      setCommentToDelete(null);
     }
   }
 
   const totalPages = Math.ceil(totalItems / PAGE_SIZE);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 sm:px-6">
+    <div className="">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex justify-start items-center pt-5">
           <h2 className="text-xl font-semibold text-gray-800">
-            Danh sách sự cố
+            Danh sách bình luận của bài viết
           </h2>
           <span className="ml-5 text-sm bg-[#D1F2FF] text-[#2F73F2] py-1 px-4 rounded-full font-medium">
-            {totalItems} sự cố
+            {totalItems} bình luận
           </span>
         </div>
         <div className="flex items-center gap-3">
           <SearchInput
-            placeholder="Tìm kiếm sự cố..."
+            placeholder="Tìm kiếm bình luận..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={(e) => {
@@ -127,14 +114,6 @@ export default function IncidentTable() {
               }
             }}
           />
-
-          <button
-            onClick={handleAdd}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-[#1D4ED8] px-4 py-2.5 text-theme-sm font-medium text-white shadow-theme-xs hover:bg-[rgba(29,78,216,0.9)] cursor-pointer"
-          >
-            <FaPlus className="my-auto" />
-            Tạo sự cố
-          </button>
         </div>
       </div>
       {loading ? (
@@ -153,12 +132,6 @@ export default function IncidentTable() {
                 isHeader
                 className="py-3 font-medium text-gray-500 text-center px-3 text-theme-sm"
               >
-                Tiêu đề
-              </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-center px-3 text-theme-sm"
-              >
                 Nội dung
               </TableCell>
               <TableCell
@@ -166,12 +139,6 @@ export default function IncidentTable() {
                 className="py-3 font-medium text-gray-500 text-center px-3 text-theme-sm"
               >
                 Ngày tạo
-              </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm"
-              >
-                Trạng thái
               </TableCell>
               <TableCell
                 isHeader
@@ -183,47 +150,33 @@ export default function IncidentTable() {
           </TableHeader>
 
           <TableBody className="divide-y divide-gray-100">
-            {incidents.map((incident) => (
+            {comments.map((comment) => (
               <TableRow
-                key={incident.incidentId}
+                key={comment.commentId}
                 className="hover:bg-gray-50 transition-colors cursor-pointer"
               >
                 <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
-                  {incident.incidentId}
+                  {comment.commentId}
                 </TableCell>
                 <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
-                  <div className="max-w-[200px] truncate mx-auto">
-                    {markdownToPlainText(incident.title).slice(0, 100)}...
-                  </div>
-                </TableCell>
-                <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
-                  {markdownToPlainText(incident.content).slice(0, 240)}...
+                  <div className="">{comment.content.slice(0, 100)}...</div>
                 </TableCell>
                 <TableCell className="py-6 text-gray-500 text-theme-sm px-3 text-center">
-                  {dayjs(incident.createdAt).format("DD/MM/YYYY")}
+                  {dayjs(comment.createdAt).format("DD/MM/YYYY")}
                 </TableCell>
-                <TableCell className="text-center px-3">
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-medium
-                    ${
-                      incident.status === 0
-                        ? "text-[#FFB836] border-2 border-[#FFB836] rounded-2xl"
-                        : " text-[#34C759] border-2 border-[#34C759] rounded-2xl"
-                    }
-                    `}
-                  >
-                    {incident.status === 0 ? "Mới" : "Đã giải quyết"}
-                  </span>
-                </TableCell>
+
                 <TableCell className="py-6 text-gray-500 text-theme-sm px-3">
                   <div className="flex gap-2 justify-center">
-                    <button onClick={() => handleView(incident.incidentId)}>
+                    <button
+                      type="button"
+                      onClick={() => handleView(comment.commentId)}
+                    >
                       <MdRemoveRedEye className="w-5 h-5 cursor-pointer" />
                     </button>
-                    <button onClick={() => handleEdit(incident.incidentId)}>
-                      <MdEdit className="w-5 h-5 cursor-pointer" />
-                    </button>
-                    <button onClick={() => handleDelete(incident.incidentId)}>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(comment.commentId)}
+                    >
                       <MdDeleteOutline className="w-5 h-5 cursor-pointer" />
                     </button>
                   </div>
@@ -248,11 +201,11 @@ export default function IncidentTable() {
         isOpen={isModalOpen}
         onClose={() => {
           setModalOpen(false);
-          setIncidentToDelete(null);
+          setCommentToDelete(null);
         }}
         onConfirm={handleConfirmDelete}
-        title="Xác nhận xóa sự cố"
-        message="Bạn có chắc chắn muốn xóa sự cố này không? Hành động này không thể hoàn tác."
+        title="Xác nhận xóa bình luận"
+        message="Bạn có chắc chắn muốn xóa bình luận này không? Hành động này không thể hoàn tác."
         confirmButtonText="Xóa"
         cancelButtonText="Hủy"
       />
