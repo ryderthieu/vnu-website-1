@@ -149,7 +149,7 @@
 
 @layer base {
   html {
-    font-family: var(--font-sans) !important;
+    font-family: var(--font-sans);
     color: var(--color-text-main);
   }
 }
