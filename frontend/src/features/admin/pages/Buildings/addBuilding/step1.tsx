@@ -1,5 +1,6 @@
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
+import debounce from "lodash/debounce";
 import {
   Form,
   Input,
@@ -40,6 +41,7 @@ const place = [
 
 const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
   const [form] = Form.useForm();
+  const [searchValue, setSearchValue] = useState("");
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [description, setDescription] = useState(initialData.description || "");
   const [belongToPlaceOption, setBelongToPlaceOption] = useState<
@@ -56,6 +58,11 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
       setFetching(false);
     }
   };
+
+  const debouncedFetchPlace = useMemo(
+    () => debounce(fetchBelongToPlaceOption, 300),
+    []
+  );
 
   const uploadProps: UploadProps = {
     name: "file",
@@ -89,7 +96,6 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
     },
     fileList: fileList,
   };
-
 
   const handleSubmit = () => {
     form.validateFields().then((values) => {
@@ -172,15 +178,26 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext }) => {
             <Form.Item
               name="place_id"
               label="Địa điểm trực thuộc"
-              rules={[{ required: true, message: "Vui lòng chọn địa điểm trực thuộc" }]}
+              rules={[
+                {
+                  required: true,
+                  message: "Vui lòng chọn địa điểm trực thuộc",
+                },
+              ]}
             >
               <Select
+                size="large"
                 showSearch
+                searchValue={searchValue}
                 placeholder="Tìm địa điểm..."
-                filterOption={false} // ❗ BẮT BUỘC
-                onSearch={fetchBelongToPlaceOption} // gọi API khi gõ
-                onFocus={() => fetchBelongToPlaceOption()}
-                notFoundContent={fetching ? <Spin size="small" /> : null}
+                filterOption={false}
+                onSearch={(value) => {
+                  setSearchValue(value);
+                  fetchBelongToPlaceOption(value);
+                }}
+                notFoundContent={
+                  fetching ? <Spin size="small" /> : "Không có địa điểm phù hợp"
+                }
                 options={belongToPlaceOption.map((p) => ({
                   label: p.name,
                   value: p.placeId,
