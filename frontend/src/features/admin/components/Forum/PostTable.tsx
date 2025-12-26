@@ -148,37 +148,37 @@ export default function PostTable() {
             <TableRow className="bg-gray-50 transition-colors">
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 px-3 text-center text-theme-sm"
+                className="py-3 font-medium text-gray-800 px-3 text-center text-theme-sm"
               >
-                Mã
+                ID
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 font-medium text-gray-800 text-center text-theme-sm"
               >
                 Tiêu đề
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm mx-2"
+                className="py-3 font-medium text-gray-800 text-center text-theme-sm mx-2"
               >
                 Tác giả
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm mx-2"
+                className="py-3 font-medium text-gray-800 text-center text-theme-sm mx-2"
               >
                 Ngày đăng
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm mx-2"
+                className="py-3 font-medium text-gray-800 text-center text-theme-sm mx-2"
               >
                 Nội dung
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 font-medium text-gray-500 text-center text-theme-sm mx-2"
+                className="py-3 font-medium text-gray-800 text-center text-theme-sm mx-2"
               >
                 Thao tác
               </TableCell>

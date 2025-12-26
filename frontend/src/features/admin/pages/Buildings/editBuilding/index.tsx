@@ -76,10 +76,10 @@ const EditBuilding: React.FC = () => {
 
   if (initialLoading) {
     return (
-      <div className="h-full bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-lg p-8 flex flex-col items-center">
-          <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
-          <p className="mt-4 text-lg font-medium">Đang tải dữ liệu tòa nhà...</p>
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Đang tải dữ liệu...</p>
         </div>
       </div>
     );

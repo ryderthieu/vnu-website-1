@@ -119,37 +119,37 @@ export default function UserTable() {
             <TableRow className="bg-gray-50 transition-colors cursor-pointer">
               <TableCell
                 isHeader
-                className="py-3 px-4 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 px-4 font-medium text-gray-800 text-center text-theme-sm"
               >
                 Mã
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 px-3 font-medium text-gray-500 text-start text-theme-sm"
+                className="py-3 px-3 font-medium text-gray-800 text-start text-theme-sm"
               >
                 Họ tên
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 px-3 font-medium text-gray-500 text-start text-theme-sm"
+                className="py-3 px-3 font-medium text-gray-800 text-start text-theme-sm"
               >
                 Email
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 px-3 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 px-3 font-medium text-gray-800 text-center text-theme-sm"
               >
                 Ngày sinh
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 px-3 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 px-3 font-medium text-gray-800 text-center text-theme-sm"
               >
                 Vai trò
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 px-3 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 px-3 font-medium text-gray-800 text-center text-theme-sm"
               >
                 Thao tác
               </TableCell>
