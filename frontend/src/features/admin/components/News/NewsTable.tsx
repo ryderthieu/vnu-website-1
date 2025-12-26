@@ -149,31 +149,31 @@ export default function NewsTable() {
             <TableRow className="bg-gray-50 transition-colors cursor-pointer">
               <TableCell
                 isHeader
-                className="py-3 px-4 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 px-4 font-medium text-gray-800 text-center text-theme-sm"
               >
                 Mã
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 px-2 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 px-2 font-medium text-gray-800 text-center text-theme-sm"
               >
                 Tiêu đề
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 px-2 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 px-2 font-medium text-gray-800 text-center text-theme-sm"
               >
                 Nội dung
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 px-2 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 px-2 font-medium text-gray-800 text-center text-theme-sm"
               >
                 Ngày tạo
               </TableCell>
               <TableCell
                 isHeader
-                className="py-3 px-4 font-medium text-gray-500 text-center text-theme-sm"
+                className="py-3 px-4 font-medium text-gray-800 text-center text-theme-sm"
               >
                 Thao tác
               </TableCell>

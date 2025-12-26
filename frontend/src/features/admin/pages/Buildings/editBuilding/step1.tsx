@@ -38,7 +38,6 @@ interface Step1Props {
 
 const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
   const [form] = Form.useForm();
-  const [searchValue, setSearchValue] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string>(initialData.image || "");
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -47,6 +46,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
     BelongToPlaceOption[]
   >([]);
   const [fetching, setFetching] = useState(false);
+  const [initializing, setInitializing] = useState(true);
 
   const fetchBelongToPlaceOption = async (search?: string) => {
     setFetching(true);
@@ -63,10 +63,53 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
     []
   );
 
-  // Fetch initial place options on mount
+  // Initialize component: fetch places and load initial place
   useEffect(() => {
-    fetchBelongToPlaceOption();
-  }, []);
+    const initialize = async () => {
+      try {
+        // First, fetch general place list
+        await fetchBelongToPlaceOption();
+
+        // If there's a selected place_id, ensure it's in the options
+        if (initialData.place_id) {
+          try {
+            const place = await placeService.getById(initialData.place_id);
+            setBelongToPlaceOption((prev) => {
+              const exists = prev.some((p) => p.placeId === place.placeId);
+              if (exists) return prev;
+              return [{ placeId: place.placeId, name: place.name }, ...prev];
+            });
+          } catch (error) {
+            console.error("Failed to load selected place:", error);
+          }
+        }
+
+        // Set form values after ensuring place is in options
+        form.setFieldsValue({
+          name: initialData.name,
+          floors: initialData.floors,
+          place_id: initialData.place_id,
+        });
+      } finally {
+        setInitializing(false);
+      }
+    };
+
+    initialize();
+  }, [initialData.place_id, initialData.name, initialData.floors, form]);
+
+  // Sync description and preview when initialData changes
+  useEffect(() => {
+    setDescription(initialData.description || "");
+    setPreviewUrl(initialData.image || "");
+  }, [initialData.description, initialData.image]);
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedFetchPlace.cancel();
+    };
+  }, [debouncedFetchPlace]);
 
   // Sync form fields and ensure the current place is in options when initialData changes
   useEffect(() => {
@@ -78,7 +121,6 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
       });
       setDescription(initialData.description || "");
       setPreviewUrl(initialData.image || "");
-      console.log("Link ảnh:", previewUrl);
 
       if (initialData.place_id) {
         // Ensure the selected place is present in the options list
@@ -96,7 +138,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
           });
       }
     }
-  }, [initialData]);
+  }, [initialData, form]);
 
   const handleBeforeUpload = (file: RcFile) => {
     // Validate file type
@@ -161,7 +203,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-      <Form form={form} layout="vertical" initialValues={initialData}>
+      <Form form={form} layout="vertical">
         {/* Image Upload */}
         <div className="flex flex-row mb-6 justify-between gap-8">
           <div className="flex-1">
@@ -245,11 +287,10 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
               <Select
                 size="large"
                 showSearch
-                searchValue={searchValue}
                 placeholder="Tìm địa điểm..."
                 filterOption={false}
+                loading={initializing || fetching}
                 onSearch={(value) => {
-                  setSearchValue(value);
                   debouncedFetchPlace(value);
                 }}
                 notFoundContent={
