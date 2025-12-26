@@ -18,9 +18,11 @@ import {
   OrderedListOutlined,
   LinkOutlined,
   InboxOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { Spin } from "antd";
 import type { UploadFile, UploadProps } from "antd";
+import type { RcFile } from "antd/es/upload";
 import type { BuildingFormData } from "../../../types/building";
 import { placeService } from "../../../services/PlaceService";
 import type { BelongToPlaceOption } from "../../../types/place";
@@ -36,13 +38,15 @@ interface Step1Props {
 
 const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
   const [form] = Form.useForm();
-  const [searchValue, setSearchValue] = useState("");
+  const [previewUrl, setPreviewUrl] = useState<string>(initialData.image || "");
   const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [description, setDescription] = useState(initialData.description || "");
   const [belongToPlaceOption, setBelongToPlaceOption] = useState<
     BelongToPlaceOption[]
   >([]);
   const [fetching, setFetching] = useState(false);
+  const [initializing, setInitializing] = useState(true);
 
   const fetchBelongToPlaceOption = async (search?: string) => {
     setFetching(true);
@@ -59,10 +63,53 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
     []
   );
 
-  // Fetch initial place options on mount
+  // Initialize component: fetch places and load initial place
   useEffect(() => {
-    fetchBelongToPlaceOption();
-  }, []);
+    const initialize = async () => {
+      try {
+        // First, fetch general place list
+        await fetchBelongToPlaceOption();
+
+        // If there's a selected place_id, ensure it's in the options
+        if (initialData.place_id) {
+          try {
+            const place = await placeService.getById(initialData.place_id);
+            setBelongToPlaceOption((prev) => {
+              const exists = prev.some((p) => p.placeId === place.placeId);
+              if (exists) return prev;
+              return [{ placeId: place.placeId, name: place.name }, ...prev];
+            });
+          } catch (error) {
+            console.error("Failed to load selected place:", error);
+          }
+        }
+
+        // Set form values after ensuring place is in options
+        form.setFieldsValue({
+          name: initialData.name,
+          floors: initialData.floors,
+          place_id: initialData.place_id,
+        });
+      } finally {
+        setInitializing(false);
+      }
+    };
+
+    initialize();
+  }, [initialData.place_id, initialData.name, initialData.floors, form]);
+
+  // Sync description and preview when initialData changes
+  useEffect(() => {
+    setDescription(initialData.description || "");
+    setPreviewUrl(initialData.image || "");
+  }, [initialData.description, initialData.image]);
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedFetchPlace.cancel();
+    };
+  }, [debouncedFetchPlace]);
 
   // Sync form fields and ensure the current place is in options when initialData changes
   useEffect(() => {
@@ -73,6 +120,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
         place_id: initialData.place_id,
       });
       setDescription(initialData.description || "");
+      setPreviewUrl(initialData.image || "");
 
       if (initialData.place_id) {
         // Ensure the selected place is present in the options list
@@ -90,39 +138,50 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
           });
       }
     }
-  }, [initialData]);
+  }, [initialData, form]);
+
+  const handleBeforeUpload = (file: RcFile) => {
+    // Validate file type
+    const isImage = file.type.startsWith("image/");
+    if (!isImage) {
+      message.error("Chỉ được tải lên file hình ảnh!");
+      return Upload.LIST_IGNORE;
+    }
+
+    // Validate file size (max 10MB)
+    const isLt10M = file.size / 1024 / 1024 < 10;
+    if (!isLt10M) {
+      message.error("Hình ảnh phải nhỏ hơn 10MB!");
+      return Upload.LIST_IGNORE;
+    }
+
+    // Save file to state
+    setImageFile(file);
+
+    // Create preview URL
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setPreviewUrl(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Return false to prevent auto upload
+    return false;
+  };
+
+  const handleRemoveImage = () => {
+    setFileList([]);
+    setImageFile(null);
+    setPreviewUrl("");
+  };
 
   const uploadProps: UploadProps = {
     name: "file",
     multiple: false,
     accept: "image/*",
-    beforeUpload: (file) => {
-      const isImage = file.type.startsWith("image/");
-      if (!isImage) {
-        message.error("Chỉ được tải lên file hình ảnh!");
-        return false;
-      }
-      const isLt5M = file.size / 1024 / 1024 < 5;
-      if (!isLt5M) {
-        message.error("Hình ảnh phải nhỏ hơn 5MB!");
-        return false;
-      }
-      return false; // Prevent auto upload
-    },
-    onChange(info) {
-      const newFileList = info.fileList.slice(-1); // Only keep the last file
-      setFileList(newFileList);
-
-      if (info.file.status === "done") {
-        message.success(`${info.file.name} file uploaded successfully.`);
-      } else if (info.file.status === "error") {
-        message.error(`${info.file.name} file upload failed.`);
-      }
-    },
-    onDrop(e) {
-      console.log("Dropped files", e.dataTransfer.files);
-    },
-    fileList: fileList,
+    beforeUpload: handleBeforeUpload,
+    fileList: [],
+    showUploadList: false,
   };
 
   const handleSubmit = () => {
@@ -132,22 +191,19 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
         return;
       }
 
-      // Get image file if exists
-      const imageFile = fileList[0]?.originFileObj;
-
       onNext({
         name: values.name,
         description: description,
         floors: values.floors,
         place_id: values.place_id,
-        imageFile: imageFile, // Save File object instead of URL
+        imageFile: imageFile, // Use the imageFile state
       });
     });
   };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-      <Form form={form} layout="vertical" initialValues={initialData}>
+      <Form form={form} layout="vertical">
         {/* Image Upload */}
         <div className="flex flex-row mb-6 justify-between gap-8">
           <div className="flex-1">
@@ -157,10 +213,26 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
             <p className="text-md text-justify text-gray-500 mb-4">
               Hình ảnh này sẽ được hiển thị công khai. Chỉ được tải lên 1 ảnh.
             </p>
+
+            {/* Preview Image */}
+            {previewUrl && (
+              <div className="mt-4 border border-gray-300 rounded-lg overflow-hidden relative">
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="w-full h-64 object-cover"
+                />
+                <CloseOutlined
+                  onClick={handleRemoveImage}
+                  className="absolute top-2 right-2 text-white bg-white bg-opacity-50 rounded-full p-1 cursor-pointer hover:bg-gray-300"
+                  style={{ fontSize: 16 }}
+                />
+              </div>
+            )}
           </div>
 
           <div className="flex-1">
-            <Dragger {...uploadProps} >
+            <Dragger {...uploadProps}>
               <p className="ant-upload-drag-icon">
                 <InboxOutlined />
               </p>
@@ -171,7 +243,7 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
                 Hỗ trợ: PNG, JPG, SVG (tối đa 10MB)
               </p>
             </Dragger>
-         </div>
+          </div>
         </div>
 
         <hr className="col-span-2 my-6 border-gray-300" />
@@ -215,11 +287,10 @@ const Step1: React.FC<Step1Props> = ({ initialData, onNext, onBack }) => {
               <Select
                 size="large"
                 showSearch
-                searchValue={searchValue}
                 placeholder="Tìm địa điểm..."
                 filterOption={false}
+                loading={initializing || fetching}
                 onSearch={(value) => {
-                  setSearchValue(value);
                   debouncedFetchPlace(value);
                 }}
                 notFoundContent={
