@@ -12,7 +12,14 @@ import { ArrowUpDown } from "lucide-react";
 import "@arcgis/core/assets/esri/themes/light/main.css";
 
 import { mapService } from "../../../api/services/mapService";
-import { addMeshToLayer, addPrismToLayer } from "./render";
+import {
+  addMeshToLayer,
+  addPrismToLayer,
+  addCylinderToLayer,
+  addPyramidToLayer,
+  addConeToLayer,
+  addFrustumToLayer,
+} from "./render";
 import RoutingPanel from "./RoutingPanel";
 import BuildingInfoPanel from "./BuildingInfoPanel";
 
@@ -65,8 +72,13 @@ export default function MapView() {
       container: mapDiv.current,
       map,
       camera: {
-        position: { longitude: 106.8023, latitude: 10.8709, z: 300 },
-        tilt: 65,
+        position: {
+          longitude: 106.79871406343166,
+          latitude: 10.870287365256974,
+          z: 150,
+        },
+        tilt: 80,
+        heading: 80,
       },
       environment: {
         lighting: {
@@ -404,11 +416,26 @@ export default function MapView() {
 
       building.objects3d?.forEach((obj: any) => {
         if (obj.objectType === 1 && obj.bodies) {
-          obj.bodies.forEach((body: any) =>
+          obj.bodies.forEach((body: any) => {
+            // Render prisms
             body.prisms?.forEach((p: any) =>
               addPrismToLayer(p, building, layer)
-            )
-          );
+            );
+            // Render cylinders
+            body.cylinders?.forEach((c: any) =>
+              addCylinderToLayer(c, building, layer)
+            );
+            // Render pyramids
+            body.pyramids?.forEach((p: any) =>
+              addPyramidToLayer(p, building, layer)
+            );
+            // Render cones
+            body.cones?.forEach((c: any) => addConeToLayer(c, building, layer));
+            // Render frustums
+            body.frustums?.forEach((f: any) =>
+              addFrustumToLayer(f, building, layer)
+            );
+          });
         }
         if (obj.objectType === 0 && obj.meshes) {
           obj.meshes.forEach((mesh: any) =>
