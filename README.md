@@ -27,6 +27,7 @@ oversight.
 # System Design
 - We applied the SUDM (Specialized Urban Data Model) model for the representation of buildings within the area.
 <img width="755" height="351" alt="image" src="https://github.com/user-attachments/assets/f816f9be-4cb1-4a89-beae-6f0c644bfd63" />
+
 - Entity Relationship Diagram (ERD):
   <img width="924" height="480" alt="image" src="https://github.com/user-attachments/assets/9c38f161-629c-475c-a354-4769acf2eedd" />
 
