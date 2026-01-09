@@ -8,6 +8,7 @@ operational platform, enabling the management board to efficiently monitor, orga
 and manage spatial assets across the campus. By integrating intuitive visuals with
 actionable insights, the project enhances both campus navigation and administrative
 oversight.
+
 **Video Demo:** [Link](https://drive.google.com/file/d/1-a4xAAwejAtWUIYsl9hV8V1QNntYnApT/view?usp=drive_link)
 # Features
 ## General System & User Management
